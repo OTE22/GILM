@@ -1,0 +1,1 @@
+{"model":"mock-report-v1","messages":[{"role":"system","content":"Be concise."},{"role":"user","content":"Hello from GILM"}],"temperature":0,"max_tokens":100}

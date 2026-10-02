@@ -1,0 +1,10 @@
+{
+  "development": [
+    {"id":"september-all","start":"2026-09-01","end":"2026-10-01","branches":["North","South"],"expected":{"North":25100,"South":30000}},
+    {"id":"september-north","start":"2026-09-01","end":"2026-10-01","branches":["North"],"expected":{"North":25100}}
+  ],
+  "held_out": [
+    {"id":"august-all","start":"2026-08-01","end":"2026-09-01","branches":["North","South"],"expected":{"North":10000,"South":20000}},
+    {"id":"august-south","start":"2026-08-01","end":"2026-09-01","branches":["South"],"expected":{"South":20000}}
+  ]
+}

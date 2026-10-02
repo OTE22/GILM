@@ -1,0 +1,16 @@
+[
+  {"sale_id":1,"tenant":"demo","branch":"North","date":"2026-09-02","amount_cents":12500,"currency":"USD","product":"Office supplies: standard stationery order","units":10},
+  {"sale_id":2,"tenant":"demo","branch":"North","date":"2026-09-09","amount_cents":7500,"currency":"USD","product":"Office supplies: replenishment stationery order","units":6},
+  {"sale_id":3,"tenant":"demo","branch":"North","date":"2026-09-19","amount_cents":3000,"currency":"USD","product":"Office supplies: small business stationery order","units":2},
+  {"sale_id":4,"tenant":"demo","branch":"North","date":"2026-09-29","amount_cents":2100,"currency":"USD","product":"Office supplies: month end stationery order","units":2},
+  {"sale_id":5,"tenant":"demo","branch":"South","date":"2026-09-03","amount_cents":9900,"currency":"USD","product":"Office supplies: standard stationery order","units":8},
+  {"sale_id":6,"tenant":"demo","branch":"South","date":"2026-09-10","amount_cents":10100,"currency":"USD","product":"Office supplies: replenishment stationery order","units":8},
+  {"sale_id":7,"tenant":"demo","branch":"South","date":"2026-09-20","amount_cents":4000,"currency":"USD","product":"Office supplies: small business stationery order","units":3},
+  {"sale_id":8,"tenant":"demo","branch":"South","date":"2026-09-30","amount_cents":6000,"currency":"USD","product":"Office supplies: month end stationery order","units":5},
+  {"sale_id":9,"tenant":"demo","branch":"North","date":"2026-08-02","amount_cents":8000,"currency":"USD","product":"Office supplies: summer stationery order","units":6},
+  {"sale_id":10,"tenant":"demo","branch":"North","date":"2026-08-23","amount_cents":2000,"currency":"USD","product":"Office supplies: summer replenishment order","units":2},
+  {"sale_id":11,"tenant":"demo","branch":"South","date":"2026-08-05","amount_cents":12300,"currency":"USD","product":"Office supplies: summer stationery order","units":10},
+  {"sale_id":12,"tenant":"demo","branch":"South","date":"2026-08-26","amount_cents":7700,"currency":"USD","product":"Office supplies: summer replenishment order","units":6},
+  {"sale_id":13,"tenant":"other","branch":"Central","date":"2026-09-02","amount_cents":900000,"currency":"USD","product":"Other tenant confidential synthetic order","units":1},
+  {"sale_id":14,"tenant":"other","branch":"Central","date":"2026-08-02","amount_cents":123400,"currency":"USD","product":"Other tenant confidential synthetic order","units":1}
+]

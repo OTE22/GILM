@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>GILM · execution ledger</title><link rel="stylesheet" href="/static/dashboard.css"><script src="/static/dashboard.js" defer></script></head>
+<body><main>
+<header><div><p class="eyebrow">GILM / LOCAL EXECUTION LEDGER</p><h1>Make every plan inspectable.</h1><p>Versioned execution, scoped data, and measured fixture outcomes.</p></div><span id="mode" class="badge">Connecting</span></header>
+<section class="controls"><label>API key <input id="key" type="password" autocomplete="off" placeholder="Empty for localhost development"></label><button id="refresh">Refresh ledger</button><p id="status" role="status"></p></section>
+<section class="notice"><strong>Synthetic reporting dataset.</strong> Mock token counts use a character estimate and hypothetical rates. HTTP traces use provider-reported usage when available. Quality results cover the measured fixtures; invoice charges are not reconciled.</section>
+<div class="grid"><section><h2>Plan versions</h2><p>Candidates require evaluation and explicit activation. The baseline remains immutable.</p><div id="plans"></div></section><section><h2>Latest request traces</h2><p>Metadata only. Select a request to inspect context decisions, accounting, and quality checks.</p><div id="traces"></div></section></div>
+<section><h2>Inspection</h2><pre id="inspection">Run the demo, then refresh to inspect stored application data.</pre></section>
+<footer>Start a reproducible run with <code>uv run python -m gilm demo</code>. No invented savings or competitor results.</footer>
+</main></body></html>

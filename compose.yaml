@@ -1,0 +1,21 @@
+services:
+  gilm:
+    build: .
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      GILM_DEV_MODE: "false"
+      GILM_HOST: "0.0.0.0"
+      GILM_DATA_DIR: /app/data
+      GILM_API_KEYS: ${GILM_API_KEYS:?Set GILM_API_KEYS to a JSON credential map}
+    volumes:
+      - gilm-data:/app/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+volumes:
+  gilm-data:
