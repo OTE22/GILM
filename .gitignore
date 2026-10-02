@@ -4,5 +4,6 @@ __pycache__/
 .ruff_cache/
 *.pyc
 .env
+.env.*.local
 data/
 artifacts/

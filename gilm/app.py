@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import hmac
 import ipaddress
+import sqlite3
 import ssl
 import uuid
 from contextlib import asynccontextmanager, suppress
@@ -22,6 +23,7 @@ from .evaluation import Evaluator
 from .models import Candidate, ChatRequest, LiveEvaluation
 from .models import ReportRequest as ReportingRequest
 from .providers import HTTPProvider, MockProvider, ProviderError
+from .runtime import Governor
 from .store import NotFound, PlanConflict, Store
 
 
@@ -44,10 +46,27 @@ def error_body(request_id, code, message, details=None):
 
 
 class BoundaryMiddleware:
-    def __init__(self, app, settings):
+    def __init__(self, app, settings, governor=None):
         self.app, self.settings = app, settings
+        self.governor = governor or Governor(settings)
 
     async def __call__(self, scope, receive, send):
+        if scope["type"] != "http" or scope.get("path") == "/health":
+            return await self.handle(scope, receive, send)
+        if not self.governor.enter():
+            rid = "req_" + uuid.uuid4().hex
+            response = JSONResponse(
+                error_body(rid, "gateway_busy", "Gateway capacity reached; request was not dispatched"),
+                status_code=503,
+                headers={"Retry-After": "1", "X-Request-ID": rid, "Cache-Control": "no-store"},
+            )
+            return await response(scope, receive, send)
+        try:
+            return await self.handle(scope, receive, send)
+        finally:
+            self.governor.leave()
+
+    async def handle(self, scope, receive, send):
         if scope["type"] != "http":
             return await self.app(scope, receive, send)
         rid = "req_" + uuid.uuid4().hex
@@ -80,8 +99,16 @@ class BoundaryMiddleware:
                     error_body(rid, "payload_too_large", "Request exceeds payload limit"), status_code=413
                 )
                 return await response(scope, receive, secure_send)
+            deadline = asyncio.get_running_loop().time() + self.settings.upload_timeout_seconds
             while True:
-                message = await receive()
+                try:
+                    async with asyncio.timeout_at(deadline):
+                        message = await receive()
+                except TimeoutError:
+                    response = JSONResponse(
+                        error_body(rid, "upload_timeout", "Request upload deadline exceeded"), status_code=408
+                    )
+                    return await response(scope, receive, secure_send)
                 if message["type"] == "http.disconnect":
                     return
                 body.extend(message.get("body", b""))
@@ -152,6 +179,7 @@ def create_app(settings=None, providers=None, http_client=None):
     provider_registry.update(providers or {})
     engine = Engine(settings, store, adapter, provider_registry)
     evaluator = Evaluator(engine)
+    governor = Governor(settings)
 
     @asynccontextmanager
     async def lifespan(app):
@@ -165,7 +193,13 @@ def create_app(settings=None, providers=None, http_client=None):
     app = FastAPI(title="GILM", version="0.1.0", lifespan=lifespan)
     app.state.engine = engine
     app.state.evaluator = evaluator
-    app.add_middleware(BoundaryMiddleware, settings=settings)
+    app.add_middleware(BoundaryMiddleware, settings=settings, governor=governor)
+    app.state.governor = governor
+
+    def limited(identity):
+        if not governor.allow(identity):
+            raise APIError(429, "scope_rate_limited", "Authorization scope request limit reached")
+        return identity
 
     async def principal(request: Request):
         origin = request.headers.get("origin")
@@ -177,7 +211,7 @@ def create_app(settings=None, providers=None, http_client=None):
             supplied = authorization.removeprefix("Bearer ") if authorization.startswith("Bearer ") else ""
             for secret, identity in settings.keys.items():
                 if hmac.compare_digest(supplied.encode(), secret.encode()):
-                    return identity
+                    return limited(identity)
             raise APIError(401, "unauthorized", "Invalid API key")
         local = False
         if request.client:
@@ -185,7 +219,7 @@ def create_app(settings=None, providers=None, http_client=None):
                 local = ipaddress.ip_address(request.client.host).is_loopback
         host = urlparse(str(request.url)).hostname
         if settings.dev_mode and local and host in {"127.0.0.1", "localhost", "::1"}:
-            return Principal("demo", ("North", "South"), True)
+            return limited(Principal("demo", ("North", "South"), True))
         raise APIError(401, "unauthorized", "Bearer authentication is required")
 
     async def manager(identity: Principal = Depends(principal)):
@@ -204,7 +238,19 @@ def create_app(settings=None, providers=None, http_client=None):
 
     @app.exception_handler(APIError)
     async def api_error(request, exc):
-        return JSONResponse(error_body(request.state.request_id, exc.code, exc.message), status_code=exc.status)
+        return JSONResponse(
+            error_body(request.state.request_id, exc.code, exc.message),
+            status_code=exc.status,
+            headers={"Retry-After": "60"} if exc.status == 429 else None,
+        )
+
+    @app.exception_handler(sqlite3.OperationalError)
+    async def storage_error(request, exc):
+        return JSONResponse(
+            error_body(request.state.request_id, "storage_unavailable", "Storage unavailable; no automatic retry"),
+            status_code=503,
+            headers={"Retry-After": "1"},
+        )
 
     @app.exception_handler(ProviderError)
     async def provider_error(request, exc):
@@ -241,6 +287,7 @@ def create_app(settings=None, providers=None, http_client=None):
             "default_provider": settings.default_provider,
             "dev_mode": settings.dev_mode,
             "openrouter_free_only": settings.openrouter_free_only,
+            "production_profile": settings.production,
         }
 
     @app.get("/ready")

@@ -31,12 +31,14 @@ class Store:
         self.default_model = default_model
         path.parent.mkdir(parents=True, exist_ok=True)
         with self.connection() as db:
+            db.execute("PRAGMA journal_mode=WAL")
             db.executescript((Path(__file__).parent / "migrations" / "001_state.sql").read_text())
             db.executescript((Path(__file__).parent / "migrations" / "002_cache_generations.sql").read_text())
+            db.executescript((Path(__file__).parent / "migrations" / "003_operational_indexes.sql").read_text())
 
     @contextmanager
     def connection(self):
-        db = sqlite3.connect(self.path, timeout=5)
+        db = sqlite3.connect(self.path, timeout=0.1)
         db.row_factory = sqlite3.Row
         try:
             yield db

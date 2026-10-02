@@ -49,9 +49,19 @@ class Settings:
     http_pricing: dict = field(default_factory=dict)
     evaluation_amortization_tasks: int | None = None
     default_provider: str = "mock"
+    production: bool = False
+    max_inflight_requests: int = 16
+    upload_timeout_seconds: float = 10.0
+    requests_per_minute: int = 120
 
     def __post_init__(self):
         self.data_dir = self.data_dir.resolve()
+        if self.production and (self.dev_mode or not self.keys or any(len(key) < 32 for key in self.keys)):
+            raise ValueError("Production requires authenticated mode and client keys of at least 32 characters")
+        if not 1 <= self.max_inflight_requests <= 256 or not 1 <= self.requests_per_minute <= 10000:
+            raise ValueError("Admission and rate limits must be bounded positive values")
+        if not math.isfinite(self.upload_timeout_seconds) or not 0 < self.upload_timeout_seconds <= 60:
+            raise ValueError("Upload deadline must be positive and at most 60 seconds")
         if self.http_ca_file is not None:
             self.http_ca_file = self.http_ca_file.resolve()
             if not self.http_ca_file.is_file():
@@ -134,6 +144,10 @@ class Settings:
             http_min_interval_seconds=float(os.getenv("GILM_HTTP_MIN_INTERVAL_SECONDS", "0")),
             http_pricing=json.loads(os.getenv("GILM_HTTP_PRICING", "{}")),
             default_provider=os.getenv("GILM_DEFAULT_PROVIDER", "mock"),
+            production=os.getenv("GILM_PRODUCTION", "false").lower() == "true",
+            max_inflight_requests=int(os.getenv("GILM_MAX_INFLIGHT_REQUESTS", "16")),
+            upload_timeout_seconds=float(os.getenv("GILM_UPLOAD_TIMEOUT_SECONDS", "10")),
+            requests_per_minute=int(os.getenv("GILM_REQUESTS_PER_MINUTE", "120")),
             evaluation_amortization_tasks=int(os.environ["GILM_EVALUATION_AMORTIZATION_TASKS"])
             if os.getenv("GILM_EVALUATION_AMORTIZATION_TASKS")
             else None,

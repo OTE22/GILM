@@ -189,7 +189,17 @@ def main():
     if args.command == "serve":
         import uvicorn
 
-        uvicorn.run("gilm.app:app", host=settings.host, port=args.port, access_log=False)
+        uvicorn.run(
+            "gilm.app:app",
+            host=settings.host,
+            port=args.port,
+            access_log=False,
+            proxy_headers=False,
+            server_header=False,
+            limit_concurrency=settings.max_inflight_requests * 2,
+            timeout_graceful_shutdown=30,
+            timeout_keep_alive=5,
+        )
     elif args.command == "benchmark-live":
         if not asyncio.run(benchmark_live(settings, args)):
             raise SystemExit(2)
