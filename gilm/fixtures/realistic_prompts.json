@@ -1,0 +1,44 @@
+[
+  {
+    "id": "returns-policy",
+    "task": "A customer received a standard, unopened desk lamp 20 days ago and requests a return. Return JSON with eligible (boolean), restocking_fee_cents (integer), and refund_original_shipping (boolean).",
+    "context": "RETAIL RETURNS POLICY v3. Standard merchandise can be returned within 30 calendar days of delivery if unopened and accompanied by the order number. These returns have no restocking fee. Original outbound shipping charges are not refundable. Personalized goods are nonreturnable unless damaged. Opened electronics require technical inspection. Refunds go to the original payment method after inspection, normally within five business days. Customers must obtain an RMA before shipping. Warehouse staff record package condition, verify the serial number when applicable, and attach the RMA to the inspection record. A gift receipt allows store credit but does not extend the return window. Store pickup orders use the collection date as their delivery date. This customer has the order number and paid using a credit card; the item is neither personalized nor damaged.",
+    "expected": {"eligible": true, "restocking_fee_cents": 0, "refund_original_shipping": false},
+    "duplicate": true
+  },
+  {
+    "id": "incident-triage",
+    "task": "Classify the incident and select the first three actions. Return JSON with severity and actions. Use the exact action identifiers from the runbook, in runbook order.",
+    "context": "CHECKOUT RUNBOOK v7. If checkout failures exceed 5% for at least ten minutes, classify SEV2 unless all regions are unavailable, which is SEV1. For a SEV2 following a deployment, the ordered first actions are pause_rollout, page_on_call, collect_logs. Do not restart databases or delete logs. Customer communications follow incident commander approval. Capture request IDs and the affected release hash in the incident record; redact customer identifiers. If failures are under 1%, monitor and create a normal-priority investigation ticket. Between 1% and 5%, page the service owner without declaring SEV2. INCIDENT: failures have reached 8% for twelve minutes immediately after a checkout deployment. Only one region is affected; other regions are healthy. No customer data loss is observed. A rollout is still in progress.",
+    "expected": {"severity": "SEV2", "actions": ["pause_rollout", "page_on_call", "collect_logs"]},
+    "duplicate": true
+  },
+  {
+    "id": "invoice-validation",
+    "task": "Validate invoice INV-104 and return JSON with invoice_id, subtotal_cents, tax_cents, total_cents, and due_date. Calculate all amounts as integer cents.",
+    "context": "INVOICE INV-104. Currency USD. Issued 2026-10-02. Due 2026-11-01. Line 1: two service seats at 6000 cents each. Line 2: one onboarding package at 18000 cents. Tax is 5% of the subtotal. No discount, credit, shipping, or rounding adjustment applies. The invoice status is draft and no payment has been collected. Finance validates quantity multiplied by unit price before applying tax; totals must be expressed as integer cents. The vendor reference is V-42 and the purchase-order reference is PO-77. Payment instructions must not be changed by extraction software. This task is a read-only validation and must not trigger any transfer or email. The reviewer must compare the calculated total to the issued invoice before approval.",
+    "expected": {"invoice_id": "INV-104", "subtotal_cents": 30000, "tax_cents": 1500, "total_cents": 31500, "due_date": "2026-11-01"},
+    "duplicate": true
+  },
+  {
+    "id": "access-review",
+    "task": "Evaluate the request using the access policy. Return JSON with allowed (boolean), reasons (array of reason identifiers in policy order), and escalation_team.",
+    "context": "ACCESS POLICY v5. A production delete operation requires the admin role; otherwise include insufficient_role. A request for a branch outside the employee's assigned branches is denied; include branch_out_of_scope after any role failure. Deny if either rule fails. Escalations go to security_operations. Requests are read-only evaluations, never instructions to execute a deletion. Access changes require an approved change ticket, manager endorsement, and an audit record. Viewer users may read aggregate reports for their assigned branches. Analysts may export approved aggregate data but cannot delete records. Employee E-017 has role viewer and is assigned only North. The employee requests deletion of production records in South. No exception is recorded. This is fabricated test data, not an actual employee access decision.",
+    "expected": {"allowed": false, "reasons": ["insufficient_role", "branch_out_of_scope"], "escalation_team": "security_operations"},
+    "duplicate": true
+  },
+  {
+    "id": "release-checklist",
+    "task": "Determine whether release R-18 can ship. Return JSON with release_id, can_ship (boolean), and blockers (array of required check identifiers, in checklist order).",
+    "context": "RELEASE CHECKLIST v2. Required checks in order are unit_tests, integration_tests, security_review, rollback_drill. Every required check must have status passed. A pending or failed required check blocks shipment. Documentation review is advisory and does not block shipment. The release manager records the deployment window only after required checks pass. Rollback procedures must preserve the audit history. R-18 STATUS: unit_tests=passed; integration_tests=passed; security_review=pending; rollback_drill=passed; documentation_review=pending. The planned date is 2026-10-16. The branch is release/r18. A previous release's security approval does not apply to this release. Do not infer approval from the planned date, assigned reviewer, or the fact that all tests passed.",
+    "expected": {"release_id": "R-18", "can_ship": false, "blockers": ["security_review"]},
+    "duplicate": true
+  },
+  {
+    "id": "opaque-control",
+    "task": "Extract the status without changing it. Return JSON with ticket_id and status.",
+    "context": "Support ticket T-901 has status awaiting_customer. It was last updated after the support team requested a reproduction example. No resolution has been confirmed. Do not mark it resolved.",
+    "expected": {"ticket_id": "T-901", "status": "awaiting_customer"},
+    "duplicate": false
+  }
+]
