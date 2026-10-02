@@ -1,5 +1,7 @@
 # Implementation and verification record
 
+The subsequent [OpenRouter verification](openrouter.md) supersedes the running-provider state below: the application now uses a tested free OpenRouter endpoint, the passing OpenRouter candidate is active, and the regression suite has **98 passing tests**. The following records preserve the original mock and Ollama results.
+
 Verified locally on 2026-10-02, using Windows, Python 3.13.1, uv 0.11.19, Docker Engine 29.0.1, and the already installed Ollama `qwen2.5:1.5b` model. The Docker image uses Python 3.13-slim and uv 0.11.19. All Python dependency installation and execution use uv and the generated `uv.lock`.
 
 ## Delivered files
